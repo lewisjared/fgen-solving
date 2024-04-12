@@ -1,8 +1,8 @@
 """
-Python wrapper of the Fortran module ``operations_w``
+Python wrapper of the Fortran module ``fgen_euler_forward_w``
 
-``operations_w`` is itself a wrapper
-around the Fortran module ``operations``.
+``fgen_euler_forward_w`` is itself a wrapper
+around the Fortran module ``fgen_euler_forward``.
 """
 from __future__ import annotations
 
@@ -25,24 +25,21 @@ from fgen_runtime.formatting import (
 from fgen_runtime.units import verify_units
 
 try:
-    from fgen_solving._lib import operations_w  # type: ignore
+    from fgen_solving._lib import fgen_euler_forward_w  # type: ignore
 except (ModuleNotFoundError, ImportError) as exc:
     raise fgr_excs.CompiledExtensionNotFoundError("fgen_solving._lib") from exc
 
 _UNITS: dict[str, str] = {
-    "weight": "dimensionless",
-    "a": "dimensionless",
-    "b": "dimensionless",
-    "vec_prod_sum": "dimensionless",
+    "step_size": "yr",
 }
 
 
 @define
-class Operator(FinalizableWrapperBase):
+class EulerForwardStepper(FinalizableWrapperBase):
     """
-    Wrapper around the Fortran :class:`Operator`
+    Wrapper around the Fortran :class:`EulerForwardStepper`
 
-    An example of another derived type
+    Implementation of a forward Euler stepper
     """
 
     @property
@@ -50,7 +47,7 @@ class Operator(FinalizableWrapperBase):
         """
         Attributes exposed by this wrapper
         """
-        return ("weight",)
+        return ("step_size",)
 
     def __str__(self) -> str:
         """
@@ -91,53 +88,53 @@ class Operator(FinalizableWrapperBase):
         None,
         (
             None,
-            _UNITS["weight"],
+            _UNITS["step_size"],
         ),
     )
     def from_build_args(
         cls,
-        weight: float,
-    ) -> Operator:
+        step_size: float,
+    ) -> EulerForwardStepper:
         """
         Initialise from build arguments
 
         This also creates a new connection to a Fortran object.
         The user is responsible for releasing this connection
         using :attr:`~finalize` when it is no longer needed.
-        Alternatively a :obj:`~OperatorContext`
+        Alternatively a :obj:`~EulerForwardStepperContext`
         can be used to handle the finalisation using a context manager.
 
         Parameters
         ----------
-        weight
-            Weight to apply to operations
+        step_size
+            Step size
 
         Returns
         -------
             Built (i.e. linked to Fortran and initialised)
-            :obj:`Operator`
+            :obj:`EulerForwardStepper`
 
         See Also
         --------
-        :meth:`OperatorContext.from_build_args`
+        :meth:`EulerForwardStepperContext.from_build_args`
         """
         out = cls.from_new_connection()
         execute_finalize_on_fail(
             out,
-            operations_w.instance_build,
-            weight=weight,
+            fgen_euler_forward_w.instance_build,
+            step_size=step_size,
         )
 
         return out
 
     @classmethod
-    def from_new_connection(cls) -> Operator:
+    def from_new_connection(cls) -> EulerForwardStepper:
         """
         Initialise from a new connection
 
         The user is responsible for releasing this connection
         using :attr:`~finalize` when it is no longer needed.
-        Alternatively a :obj:`~OperatorContext`
+        Alternatively a :obj:`~EulerForwardStepperContext`
         can be used to handle the finalisation using a context manager.
 
         Returns
@@ -151,7 +148,7 @@ class Operator(FinalizableWrapperBase):
 
             This could occur if too many instances are allocated at any one time
         """
-        instance_index = operations_w.get_free_instance_number()
+        instance_index = fgen_euler_forward_w.get_free_instance_number()
         if instance_index == INVALID_INSTANCE_INDEX:
             raise fgr_excs.WrapperErrorUnknownCause(  # noqa: TRY003
                 f"Could not create instance of {cls.__name__}. "
@@ -165,19 +162,19 @@ class Operator(FinalizableWrapperBase):
         """
         Close the connection with the Fortran module
         """
-        operations_w.instance_finalize(self.instance_index)
+        fgen_euler_forward_w.instance_finalize(self.instance_index)
         self._uninitialise_instance_index()
 
     # Attribute getters and setters
     @property
     @check_initialised
     @verify_units(
-        _UNITS["weight"],
+        _UNITS["step_size"],
         (None,),
     )
-    def weight(self) -> float:
+    def step_size(self) -> float:
         """
-        Weight to apply to operations
+        Step size
 
         Returns
         -------
@@ -188,63 +185,21 @@ class Operator(FinalizableWrapperBase):
             in the underlying instance of the derived type.
             To make changes to the underlying instance, use the setter instead.
         """
-        # Wrapping weight
+        # Wrapping step_size
         # Strategy: WrappingStrategyDefault(
         #     magnitude_suffix='_m',
         # )
-        weight: float = operations_w.iget_weight(
+        step_size: float = fgen_euler_forward_w.iget_step_size(
             self.instance_index,
         )
 
-        return weight
-
-    # Wrapped methods
-    @check_initialised
-    @verify_units(
-        _UNITS["vec_prod_sum"],
-        (
-            None,
-            _UNITS["a"],
-            _UNITS["b"],
-        ),
-    )
-    def calc_vec_prod_sum(
-        self,
-        a: tuple[float, float, float],
-        b: tuple[float, float, float],
-    ) -> float:
-        """
-        Calculate vector product then sum then multiply by `self % weight`
-
-        Parameters
-        ----------
-        a
-            first vector
-
-        b
-            second vector
-
-        Returns
-        -------
-            Result of doing vector product then sum then multiplying by `self % weight`
-        """
-        # Wrapping vec_prod_sum
-        # Strategy: WrappingStrategyDefault(
-        #     magnitude_suffix='_m',
-        # )
-        vec_prod_sum: float = operations_w.i_calc_vec_prod_sum(
-            self.instance_index,
-            a=a,
-            b=b,
-        )
-
-        return vec_prod_sum
+        return step_size
 
 
 @define
-class OperatorNoSetters(FinalizableWrapperBase):
+class EulerForwardStepperNoSetters(FinalizableWrapperBase):
     """
-    Wrapper around the Fortran :class:`Operator`
+    Wrapper around the Fortran :class:`EulerForwardStepper`
 
     This wrapper has no setters so can be used for representing objects
     that have no connection to the underlying Fortran
@@ -252,7 +207,7 @@ class OperatorNoSetters(FinalizableWrapperBase):
     will have no effect on the underlying Fortran).
     For example, derived type attribute values that are allocatable.
 
-    An example of another derived type
+    Implementation of a forward Euler stepper
     """
 
     @property
@@ -260,7 +215,7 @@ class OperatorNoSetters(FinalizableWrapperBase):
         """
         Attributes exposed by this wrapper
         """
-        return ("weight",)
+        return ("step_size",)
 
     def __str__(self) -> str:
         """
@@ -301,53 +256,53 @@ class OperatorNoSetters(FinalizableWrapperBase):
         None,
         (
             None,
-            _UNITS["weight"],
+            _UNITS["step_size"],
         ),
     )
     def from_build_args(
         cls,
-        weight: float,
-    ) -> OperatorNoSetters:
+        step_size: float,
+    ) -> EulerForwardStepperNoSetters:
         """
         Initialise from build arguments
 
         This also creates a new connection to a Fortran object.
         The user is responsible for releasing this connection
         using :attr:`~finalize` when it is no longer needed.
-        Alternatively a :obj:`~OperatorNoSettersContext`
+        Alternatively a :obj:`~EulerForwardStepperNoSettersContext`
         can be used to handle the finalisation using a context manager.
 
         Parameters
         ----------
-        weight
-            Weight to apply to operations
+        step_size
+            Step size
 
         Returns
         -------
             Built (i.e. linked to Fortran and initialised)
-            :obj:`OperatorNoSetters`
+            :obj:`EulerForwardStepperNoSetters`
 
         See Also
         --------
-        :meth:`OperatorNoSettersContext.from_build_args`
+        :meth:`EulerForwardStepperNoSettersContext.from_build_args`
         """
         out = cls.from_new_connection()
         execute_finalize_on_fail(
             out,
-            operations_w.instance_build,
-            weight=weight,
+            fgen_euler_forward_w.instance_build,
+            step_size=step_size,
         )
 
         return out
 
     @classmethod
-    def from_new_connection(cls) -> OperatorNoSetters:
+    def from_new_connection(cls) -> EulerForwardStepperNoSetters:
         """
         Initialise from a new connection
 
         The user is responsible for releasing this connection
         using :attr:`~finalize` when it is no longer needed.
-        Alternatively a :obj:`~OperatorNoSettersContext`
+        Alternatively a :obj:`~EulerForwardStepperNoSettersContext`
         can be used to handle the finalisation using a context manager.
 
         Returns
@@ -361,7 +316,7 @@ class OperatorNoSetters(FinalizableWrapperBase):
 
             This could occur if too many instances are allocated at any one time
         """
-        instance_index = operations_w.get_free_instance_number()
+        instance_index = fgen_euler_forward_w.get_free_instance_number()
         if instance_index == INVALID_INSTANCE_INDEX:
             raise fgr_excs.WrapperErrorUnknownCause(  # noqa: TRY003
                 f"Could not create instance of {cls.__name__}. "
@@ -375,19 +330,19 @@ class OperatorNoSetters(FinalizableWrapperBase):
         """
         Close the connection with the Fortran module
         """
-        operations_w.instance_finalize(self.instance_index)
+        fgen_euler_forward_w.instance_finalize(self.instance_index)
         self._uninitialise_instance_index()
 
     # Attribute getters
     @property
     @check_initialised
     @verify_units(
-        _UNITS["weight"],
+        _UNITS["step_size"],
         (None,),
     )
-    def weight(self) -> float:
+    def step_size(self) -> float:
         """
-        Weight to apply to operations
+        Step size
 
         Returns
         -------
@@ -398,63 +353,21 @@ class OperatorNoSetters(FinalizableWrapperBase):
             in the underlying instance of the derived type.
             To make changes to the underlying instance, use the setter instead.
         """
-        # Wrapping weight
+        # Wrapping step_size
         # Strategy: WrappingStrategyDefault(
         #     magnitude_suffix='_m',
         # )
-        weight: float = operations_w.iget_weight(
+        step_size: float = fgen_euler_forward_w.iget_step_size(
             self.instance_index,
         )
 
-        return weight
-
-    # Wrapped methods
-    @check_initialised
-    @verify_units(
-        _UNITS["vec_prod_sum"],
-        (
-            None,
-            _UNITS["a"],
-            _UNITS["b"],
-        ),
-    )
-    def calc_vec_prod_sum(
-        self,
-        a: tuple[float, float, float],
-        b: tuple[float, float, float],
-    ) -> float:
-        """
-        Calculate vector product then sum then multiply by `self % weight`
-
-        Parameters
-        ----------
-        a
-            first vector
-
-        b
-            second vector
-
-        Returns
-        -------
-            Result of doing vector product then sum then multiplying by `self % weight`
-        """
-        # Wrapping vec_prod_sum
-        # Strategy: WrappingStrategyDefault(
-        #     magnitude_suffix='_m',
-        # )
-        vec_prod_sum: float = operations_w.i_calc_vec_prod_sum(
-            self.instance_index,
-            a=a,
-            b=b,
-        )
-
-        return vec_prod_sum
+        return step_size
 
 
 @define
-class OperatorContext(FinalizableWrapperBaseContext):
+class EulerForwardStepperContext(FinalizableWrapperBaseContext):
     """
-    Context manager for :class:`Operator`
+    Context manager for :class:`EulerForwardStepper`
     """
 
     @classmethod
@@ -462,19 +375,19 @@ class OperatorContext(FinalizableWrapperBaseContext):
         cls,
         *args: Any,
         **kwargs: Any,
-    ) -> OperatorContext:
+    ) -> EulerForwardStepperContext:
         """
         Docstrings to be handled as part of #223
         """
         return cls(
-            Operator.from_build_args(*args, **kwargs),
+            EulerForwardStepper.from_build_args(*args, **kwargs),
         )
 
 
 @define
-class OperatorNoSettersContext(FinalizableWrapperBaseContext):
+class EulerForwardStepperNoSettersContext(FinalizableWrapperBaseContext):
     """
-    Context manager for :class:`OperatorNoSetters`
+    Context manager for :class:`EulerForwardStepperNoSetters`
     """
 
     @classmethod
@@ -482,10 +395,10 @@ class OperatorNoSettersContext(FinalizableWrapperBaseContext):
         cls,
         *args: Any,
         **kwargs: Any,
-    ) -> OperatorNoSettersContext:
+    ) -> EulerForwardStepperNoSettersContext:
         """
         Docstrings to be handled as part of #223
         """
         return cls(
-            OperatorNoSetters.from_build_args(*args, **kwargs),
+            EulerForwardStepperNoSetters.from_build_args(*args, **kwargs),
         )

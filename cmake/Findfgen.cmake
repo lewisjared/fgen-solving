@@ -51,7 +51,7 @@ The following cache variables may be set to influence the library detection:
 set(_lib "fgen")
 set(_pkg "FGEN")
 set(_url "https://gitlab.com/magicc/fgen")
-set(_hash "5a0f96071addcae99a272cecb845770b533ae582")  # v0.4.1
+set(_hash "f1fff22cc0722aca526cbba1860116c68d66e12c")  # origin/remove-solving
 
 if(NOT DEFINED "${_pkg}_FIND_METHOD")
   if(DEFINED "${PROJECT_NAME}-dependency-method")

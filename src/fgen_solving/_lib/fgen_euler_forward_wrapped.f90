@@ -1,18 +1,18 @@
 !!!
-! Wrapper for ``operations``
+! Wrapper for ``fgen_euler_forward``
 !
-! In combination with ``operations_manager``,
-! this allows the ``Operator`` derived type
+! In combination with ``fgen_euler_forward_manager``,
+! this allows the ``EulerForwardStepper`` derived type
 ! to be exposed to Python.
 !!!
-module operations_w
+module fgen_euler_forward_w
 
    ! Standard library requirements
    use iso_c_binding, only: c_loc, c_ptr
 
    ! First-party requirements from the module we're wrapping
-   use operations, only: Operator
-   use operations_manager, only: &
+   use fgen_euler_forward, only: EulerForwardStepper
+   use fgen_euler_forward_manager, only: &
       manager_get_free_instance => get_free_instance_number, &
       manager_instance_finalize => instance_finalize, &
       manager_get_instance => get_instance
@@ -25,11 +25,8 @@ module operations_w
              instance_finalize
 
    ! Statment declarations for getters and setters
-   public :: iget_weight
-   public :: iset_weight
-
-   ! Statement declarations for methods
-   public :: i_calc_vec_prod_sum
+   public :: iget_step_size
+   public :: iset_step_size
 
 contains
 
@@ -48,20 +45,20 @@ contains
    ! rather than returning a new instance.
    subroutine instance_build( &
       instance_index, &
-      weight &
+      step_size &
       )
 
       integer, intent(in) :: instance_index
 
-      real(8), intent(in) :: weight
-      ! Passing of weight
+      real(kind=8), intent(in) :: step_size
+      ! Passing of step_size
 
-      type(Operator), pointer :: instance
+      type(EulerForwardStepper), pointer :: instance
 
       call manager_get_instance(instance_index, instance)
 
       call instance%build( &
-         weight=weight &
+         step_size=step_size &
          )
 
    end subroutine instance_build
@@ -76,78 +73,44 @@ contains
    end subroutine instance_finalize
 
    ! Attributes getters and setters
-   ! Wrapping weight
+   ! Wrapping step_size
    ! Strategy: WrappingStrategyDefault(
    !     magnitude_suffix='_m',
    ! )
-   subroutine iget_weight( &
+   subroutine iget_step_size( &
       instance_index, &
-      weight &
+      step_size &
       )
 
       integer, intent(in) :: instance_index
 
-      real(8), intent(out) :: weight
-      ! Returning of weight
+      real(kind=8), intent(out) :: step_size
+      ! Returning of step_size
 
-      type(Operator), pointer :: instance
+      type(EulerForwardStepper), pointer :: instance
 
       call manager_get_instance(instance_index, instance)
 
-      weight = instance%weight
+      step_size = instance%step_size
 
-   end subroutine iget_weight
+   end subroutine iget_step_size
 
-   subroutine iset_weight( &
+   subroutine iset_step_size( &
       instance_index, &
-      weight &
+      step_size &
       )
 
       integer, intent(in) :: instance_index
 
-      real(8), intent(in) :: weight
-      ! Passing of weight
+      real(kind=8), intent(in) :: step_size
+      ! Passing of step_size
 
-      type(Operator), pointer :: instance
-
-      call manager_get_instance(instance_index, instance)
-
-      instance%weight = weight
-
-   end subroutine iset_weight
-
-   ! Wrapped methods
-   ! Wrapping vec_prod_sum
-   ! Strategy: WrappingStrategyDefault(
-   !     magnitude_suffix='_m',
-   ! )
-   subroutine i_calc_vec_prod_sum( &
-      instance_index, &
-      a, &
-      b, &
-      vec_prod_sum &
-      )
-
-      integer, intent(in) :: instance_index
-
-      real(8), dimension(3), intent(in) :: a
-      ! Passing of a
-
-      real(8), dimension(3), intent(in) :: b
-      ! Passing of b
-
-      real(8), intent(out) :: vec_prod_sum
-      ! Returning of vec_prod_sum
-
-      type(Operator), pointer :: instance
+      type(EulerForwardStepper), pointer :: instance
 
       call manager_get_instance(instance_index, instance)
 
-      vec_prod_sum = instance%calc_vec_prod_sum( &
-                     a=a, &
-                     b=b &
-                     )
+      instance%step_size = step_size
 
-   end subroutine i_calc_vec_prod_sum
+   end subroutine iset_step_size
 
-end module operations_w
+end module fgen_euler_forward_w

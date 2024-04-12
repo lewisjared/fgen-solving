@@ -1,13 +1,13 @@
 !
-! Manager for ``operations``'s ``Operator`` derived type
+! Manager for ``fgen_euler_forward``'s ``EulerForwardStepper`` derived type
 !
-! In combination with ``operations_w``,
-! this allows the ``Operator`` derived type
+! In combination with ``fgen_euler_forward_w``,
+! this allows the ``EulerForwardStepper`` derived type
 ! to be exposed to Python.
 !
-module operations_manager
+module fgen_euler_forward_manager
 
-   use operations, only: Operator
+   use fgen_euler_forward, only: EulerForwardStepper
    use fgen_utils, only: &
       finalize_derived_type_instance_number, &
       get_derived_type_free_instance_number
@@ -17,7 +17,7 @@ module operations_manager
 
    integer, parameter :: N_INSTANCES = 4096
 
-   type(Operator), target, dimension(N_INSTANCES) :: instance_array
+   type(EulerForwardStepper), target, dimension(N_INSTANCES) :: instance_array
    logical, dimension(N_INSTANCES) :: instance_available = .true.
 
    public :: get_free_instance_number, &
@@ -49,7 +49,7 @@ contains
       integer, intent(in) :: instance_index
       ! Index of the instance to point to
 
-      type(Operator), pointer, intent(inout) :: instance_pointer
+      type(EulerForwardStepper), pointer, intent(inout) :: instance_pointer
       ! Pointer to associate
 
       call check_index_claimed(instance_index)
@@ -101,4 +101,4 @@ contains
 
    end subroutine check_index_claimed
 
-end module operations_manager
+end module fgen_euler_forward_manager

@@ -1,0 +1,12 @@
+name: fgen_euler_forward
+description: fgen's forward Euler stepper
+provides:
+  name: EulerForwardStepper
+  description: Implementation of a forward Euler stepper
+  attributes:
+    step_size:
+      definition:
+        description: Step size
+        fortran_type: real(kind=8)
+      unit: yr
+  methods: {}

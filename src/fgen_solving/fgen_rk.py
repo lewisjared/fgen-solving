@@ -1,8 +1,8 @@
 """
-Python wrapper of the Fortran module ``derived_type_w``
+Python wrapper of the Fortran module ``fgen_rk_w``
 
-``derived_type_w`` is itself a wrapper
-around the Fortran module ``derived_type``.
+``fgen_rk_w`` is itself a wrapper
+around the Fortran module ``fgen_rk``.
 """
 from __future__ import annotations
 
@@ -25,23 +25,23 @@ from fgen_runtime.formatting import (
 from fgen_runtime.units import verify_units
 
 try:
-    from fgen_solving._lib import derived_type_w  # type: ignore
+    from fgen_solving._lib import fgen_rk_w  # type: ignore
 except (ModuleNotFoundError, ImportError) as exc:
     raise fgr_excs.CompiledExtensionNotFoundError("fgen_solving._lib") from exc
 
 _UNITS: dict[str, str] = {
-    "base": "m",
-    "other": "m",
-    "output": "m",
+    "rtol": "dimensionless",
+    "atol": "dimensionless",
+    "h": "yr",
 }
 
 
 @define
-class DerivedType(FinalizableWrapperBase):
+class RK4Stepper(FinalizableWrapperBase):
     """
-    Wrapper around the Fortran :class:`DerivedType`
+    Wrapper around the Fortran :class:`RK4Stepper`
 
-    An example of a derived type
+    Implementation of a Runge-Kutta 4th order stepper
     """
 
     @property
@@ -49,7 +49,11 @@ class DerivedType(FinalizableWrapperBase):
         """
         Attributes exposed by this wrapper
         """
-        return ("base",)
+        return (
+            "rtol",
+            "atol",
+            "h",
+        )
 
     def __str__(self) -> str:
         """
@@ -90,53 +94,65 @@ class DerivedType(FinalizableWrapperBase):
         None,
         (
             None,
-            _UNITS["base"],
+            _UNITS["rtol"],
+            _UNITS["atol"],
+            _UNITS["h"],
         ),
     )
     def from_build_args(
         cls,
-        base: float,
-    ) -> DerivedType:
+        rtol: float,
+        atol: float,
+        h: float,
+    ) -> RK4Stepper:
         """
         Initialise from build arguments
 
         This also creates a new connection to a Fortran object.
         The user is responsible for releasing this connection
         using :attr:`~finalize` when it is no longer needed.
-        Alternatively a :obj:`~DerivedTypeContext`
+        Alternatively a :obj:`~RK4StepperContext`
         can be used to handle the finalisation using a context manager.
 
         Parameters
         ----------
-        base
-            Base value
+        rtol
+            Relative tolerance to use when deciding step size
+
+        atol
+            Absolute tolerance to use when deciding step size
+
+        h
+            Step size
 
         Returns
         -------
             Built (i.e. linked to Fortran and initialised)
-            :obj:`DerivedType`
+            :obj:`RK4Stepper`
 
         See Also
         --------
-        :meth:`DerivedTypeContext.from_build_args`
+        :meth:`RK4StepperContext.from_build_args`
         """
         out = cls.from_new_connection()
         execute_finalize_on_fail(
             out,
-            derived_type_w.instance_build,
-            base=base,
+            fgen_rk_w.instance_build,
+            rtol=rtol,
+            atol=atol,
+            h=h,
         )
 
         return out
 
     @classmethod
-    def from_new_connection(cls) -> DerivedType:
+    def from_new_connection(cls) -> RK4Stepper:
         """
         Initialise from a new connection
 
         The user is responsible for releasing this connection
         using :attr:`~finalize` when it is no longer needed.
-        Alternatively a :obj:`~DerivedTypeContext`
+        Alternatively a :obj:`~RK4StepperContext`
         can be used to handle the finalisation using a context manager.
 
         Returns
@@ -150,7 +166,7 @@ class DerivedType(FinalizableWrapperBase):
 
             This could occur if too many instances are allocated at any one time
         """
-        instance_index = derived_type_w.get_free_instance_number()
+        instance_index = fgen_rk_w.get_free_instance_number()
         if instance_index == INVALID_INSTANCE_INDEX:
             raise fgr_excs.WrapperErrorUnknownCause(  # noqa: TRY003
                 f"Could not create instance of {cls.__name__}. "
@@ -164,19 +180,19 @@ class DerivedType(FinalizableWrapperBase):
         """
         Close the connection with the Fortran module
         """
-        derived_type_w.instance_finalize(self.instance_index)
+        fgen_rk_w.instance_finalize(self.instance_index)
         self._uninitialise_instance_index()
 
     # Attribute getters and setters
     @property
     @check_initialised
     @verify_units(
-        _UNITS["base"],
+        _UNITS["rtol"],
         (None,),
     )
-    def base(self) -> float:
+    def rtol(self) -> float:
         """
-        Base value
+        Relative tolerance to use when deciding step size
 
         Returns
         -------
@@ -187,82 +203,79 @@ class DerivedType(FinalizableWrapperBase):
             in the underlying instance of the derived type.
             To make changes to the underlying instance, use the setter instead.
         """
-        # Wrapping base
+        # Wrapping rtol
         # Strategy: WrappingStrategyDefault(
         #     magnitude_suffix='_m',
         # )
-        base: float = derived_type_w.iget_base(
+        rtol: float = fgen_rk_w.iget_rtol(
             self.instance_index,
         )
 
-        return base
+        return rtol
 
-    # Wrapped methods
+    @property
     @check_initialised
     @verify_units(
-        _UNITS["output"],
-        (
-            None,
-            _UNITS["other"],
-        ),
-    )
-    def add(
-        self,
-        other: float,
-    ) -> float:
-        """
-        Add another value to `self.base`
-
-        Parameters
-        ----------
-        other
-            Quantity to add
-
-        Returns
-        -------
-            Sum of `self.base` and `other`
-        """
-        # Wrapping output
-        # Strategy: WrappingStrategyDefault(
-        #     magnitude_suffix='_m',
-        # )
-        output: float = derived_type_w.i_add(
-            self.instance_index,
-            other=other,
-        )
-
-        return output
-
-    @check_initialised
-    @verify_units(
-        _UNITS["output"],
+        _UNITS["atol"],
         (None,),
     )
-    def double(
-        self,
-    ) -> float:
+    def atol(self) -> float:
         """
-        Double `self.base`
+        Absolute tolerance to use when deciding step size
 
         Returns
         -------
-            Double `self.base`
+            Attribute value, retrieved from Fortran.
+
+            The value is a copy of the derived type's data.
+            Changes to this value will not be reflected
+            in the underlying instance of the derived type.
+            To make changes to the underlying instance, use the setter instead.
         """
-        # Wrapping output
+        # Wrapping atol
         # Strategy: WrappingStrategyDefault(
         #     magnitude_suffix='_m',
         # )
-        output: float = derived_type_w.i_double(
+        atol: float = fgen_rk_w.iget_atol(
             self.instance_index,
         )
 
-        return output
+        return atol
+
+    @property
+    @check_initialised
+    @verify_units(
+        _UNITS["h"],
+        (None,),
+    )
+    def h(self) -> float:
+        """
+        Step size
+
+        Returns
+        -------
+            Attribute value, retrieved from Fortran.
+
+            The value is a copy of the derived type's data.
+            Changes to this value will not be reflected
+            in the underlying instance of the derived type.
+            To make changes to the underlying instance, use the setter instead.
+        """
+        # Wrapping h
+        # Strategy: WrappingStrategyDefault(
+        #     magnitude_suffix='_m',
+        # )
+        h: float = fgen_rk_w.iget_h(
+            self.instance_index,
+        )
+
+        return h
 
 
 @define
-class DerivedTypeNoSetters(FinalizableWrapperBase):
+class RK4StepperNoSetters(FinalizableWrapperBase):
     """
-    Wrapper around the Fortran :class:`DerivedType`
+    Wrapper around the Fortran :class:`RK4Stepper`
 
     This wrapper has no setters so can be used for representing objects
     that have no connection to the underlying Fortran
@@ -270,7 +283,7 @@ class DerivedTypeNoSetters(FinalizableWrapperBase):
     will have no effect on the underlying Fortran).
     For example, derived type attribute values that are allocatable.
 
-    An example of a derived type
+    Implementation of a Runge-Kutta 4th order stepper
     """
 
     @property
@@ -278,7 +291,11 @@ class DerivedTypeNoSetters(FinalizableWrapperBase):
         """
         Attributes exposed by this wrapper
         """
-        return ("base",)
+        return (
+            "rtol",
+            "atol",
+            "h",
+        )
 
     def __str__(self) -> str:
         """
@@ -319,53 +336,65 @@ class DerivedTypeNoSetters(FinalizableWrapperBase):
         None,
         (
             None,
-            _UNITS["base"],
+            _UNITS["rtol"],
+            _UNITS["atol"],
+            _UNITS["h"],
         ),
     )
     def from_build_args(
         cls,
-        base: float,
-    ) -> DerivedTypeNoSetters:
+        rtol: float,
+        atol: float,
+        h: float,
+    ) -> RK4StepperNoSetters:
         """
         Initialise from build arguments
 
         This also creates a new connection to a Fortran object.
         The user is responsible for releasing this connection
         using :attr:`~finalize` when it is no longer needed.
-        Alternatively a :obj:`~DerivedTypeNoSettersContext`
+        Alternatively a :obj:`~RK4StepperNoSettersContext`
         can be used to handle the finalisation using a context manager.
 
         Parameters
         ----------
-        base
-            Base value
+        rtol
+            Relative tolerance to use when deciding step size
+
+        atol
+            Absolute tolerance to use when deciding step size
+
+        h
+            Step size
 
         Returns
         -------
             Built (i.e. linked to Fortran and initialised)
-            :obj:`DerivedTypeNoSetters`
+            :obj:`RK4StepperNoSetters`
 
         See Also
         --------
-        :meth:`DerivedTypeNoSettersContext.from_build_args`
+        :meth:`RK4StepperNoSettersContext.from_build_args`
         """
         out = cls.from_new_connection()
         execute_finalize_on_fail(
             out,
-            derived_type_w.instance_build,
-            base=base,
+            fgen_rk_w.instance_build,
+            rtol=rtol,
+            atol=atol,
+            h=h,
         )
 
         return out
 
     @classmethod
-    def from_new_connection(cls) -> DerivedTypeNoSetters:
+    def from_new_connection(cls) -> RK4StepperNoSetters:
         """
         Initialise from a new connection
 
         The user is responsible for releasing this connection
         using :attr:`~finalize` when it is no longer needed.
-        Alternatively a :obj:`~DerivedTypeNoSettersContext`
+        Alternatively a :obj:`~RK4StepperNoSettersContext`
         can be used to handle the finalisation using a context manager.
 
         Returns
@@ -379,7 +408,7 @@ class DerivedTypeNoSetters(FinalizableWrapperBase):
 
             This could occur if too many instances are allocated at any one time
         """
-        instance_index = derived_type_w.get_free_instance_number()
+        instance_index = fgen_rk_w.get_free_instance_number()
         if instance_index == INVALID_INSTANCE_INDEX:
             raise fgr_excs.WrapperErrorUnknownCause(  # noqa: TRY003
                 f"Could not create instance of {cls.__name__}. "
@@ -393,19 +422,19 @@ class DerivedTypeNoSetters(FinalizableWrapperBase):
         """
         Close the connection with the Fortran module
         """
-        derived_type_w.instance_finalize(self.instance_index)
+        fgen_rk_w.instance_finalize(self.instance_index)
         self._uninitialise_instance_index()
 
     # Attribute getters
     @property
     @check_initialised
     @verify_units(
-        _UNITS["base"],
+        _UNITS["rtol"],
         (None,),
     )
-    def base(self) -> float:
+    def rtol(self) -> float:
         """
-        Base value
+        Relative tolerance to use when deciding step size
 
         Returns
         -------
@@ -416,82 +445,79 @@ class DerivedTypeNoSetters(FinalizableWrapperBase):
             in the underlying instance of the derived type.
             To make changes to the underlying instance, use the setter instead.
         """
-        # Wrapping base
+        # Wrapping rtol
         # Strategy: WrappingStrategyDefault(
         #     magnitude_suffix='_m',
         # )
-        base: float = derived_type_w.iget_base(
+        rtol: float = fgen_rk_w.iget_rtol(
             self.instance_index,
         )
 
-        return base
+        return rtol
 
-    # Wrapped methods
+    @property
     @check_initialised
     @verify_units(
-        _UNITS["output"],
-        (
-            None,
-            _UNITS["other"],
-        ),
-    )
-    def add(
-        self,
-        other: float,
-    ) -> float:
-        """
-        Add another value to `self.base`
-
-        Parameters
-        ----------
-        other
-            Quantity to add
-
-        Returns
-        -------
-            Sum of `self.base` and `other`
-        """
-        # Wrapping output
-        # Strategy: WrappingStrategyDefault(
-        #     magnitude_suffix='_m',
-        # )
-        output: float = derived_type_w.i_add(
-            self.instance_index,
-            other=other,
-        )
-
-        return output
-
-    @check_initialised
-    @verify_units(
-        _UNITS["output"],
+        _UNITS["atol"],
         (None,),
     )
-    def double(
-        self,
-    ) -> float:
+    def atol(self) -> float:
         """
-        Double `self.base`
+        Absolute tolerance to use when deciding step size
 
         Returns
         -------
-            Double `self.base`
+            Attribute value, retrieved from Fortran.
+
+            The value is a copy of the derived type's data.
+            Changes to this value will not be reflected
+            in the underlying instance of the derived type.
+            To make changes to the underlying instance, use the setter instead.
         """
-        # Wrapping output
+        # Wrapping atol
         # Strategy: WrappingStrategyDefault(
         #     magnitude_suffix='_m',
         # )
-        output: float = derived_type_w.i_double(
+        atol: float = fgen_rk_w.iget_atol(
             self.instance_index,
         )
 
-        return output
+        return atol
+
+    @property
+    @check_initialised
+    @verify_units(
+        _UNITS["h"],
+        (None,),
+    )
+    def h(self) -> float:
+        """
+        Step size
+
+        Returns
+        -------
+            Attribute value, retrieved from Fortran.
+
+            The value is a copy of the derived type's data.
+            Changes to this value will not be reflected
+            in the underlying instance of the derived type.
+            To make changes to the underlying instance, use the setter instead.
+        """
+        # Wrapping h
+        # Strategy: WrappingStrategyDefault(
+        #     magnitude_suffix='_m',
+        # )
+        h: float = fgen_rk_w.iget_h(
+            self.instance_index,
+        )
+
+        return h
 
 
 @define
-class DerivedTypeContext(FinalizableWrapperBaseContext):
+class RK4StepperContext(FinalizableWrapperBaseContext):
     """
-    Context manager for :class:`DerivedType`
+    Context manager for :class:`RK4Stepper`
     """
 
     @classmethod
@@ -499,19 +525,19 @@ class DerivedTypeContext(FinalizableWrapperBaseContext):
         cls,
         *args: Any,
         **kwargs: Any,
-    ) -> DerivedTypeContext:
+    ) -> RK4StepperContext:
         """
         Docstrings to be handled as part of #223
         """
         return cls(
-            DerivedType.from_build_args(*args, **kwargs),
+            RK4Stepper.from_build_args(*args, **kwargs),
         )
 
 
 @define
-class DerivedTypeNoSettersContext(FinalizableWrapperBaseContext):
+class RK4StepperNoSettersContext(FinalizableWrapperBaseContext):
     """
-    Context manager for :class:`DerivedTypeNoSetters`
+    Context manager for :class:`RK4StepperNoSetters`
     """
 
     @classmethod
@@ -519,10 +545,10 @@ class DerivedTypeNoSettersContext(FinalizableWrapperBaseContext):
         cls,
         *args: Any,
         **kwargs: Any,
-    ) -> DerivedTypeNoSettersContext:
+    ) -> RK4StepperNoSettersContext:
         """
         Docstrings to be handled as part of #223
         """
         return cls(
-            DerivedTypeNoSetters.from_build_args(*args, **kwargs),
+            RK4StepperNoSetters.from_build_args(*args, **kwargs),
         )

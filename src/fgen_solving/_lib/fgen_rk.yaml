@@ -1,0 +1,22 @@
+name: fgen_rk
+description: fgen's Runge-Kutta 4th order stepper (TODO re-name the module)
+provides:
+  name: RK4Stepper
+  description: Implementation of a Runge-Kutta 4th order stepper
+  attributes:
+    rtol:
+      definition:
+        description: Relative tolerance to use when deciding step size
+        fortran_type: real(kind=8)
+      unit: dimensionless
+    atol:
+      definition:
+        description: Absolute tolerance to use when deciding step size
+        fortran_type: real(kind=8)
+      unit: dimensionless
+    h:
+      definition:
+        description: Step size
+        fortran_type: real(kind=8)
+      unit: yr
+  methods: {}

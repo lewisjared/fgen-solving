@@ -1,13 +1,13 @@
 !
-! Manager for ``derived_type``'s ``DerivedType`` derived type
+! Manager for ``fgen_rk``'s ``RK4Stepper`` derived type
 !
-! In combination with ``derived_type_w``,
-! this allows the ``DerivedType`` derived type
+! In combination with ``fgen_rk_w``,
+! this allows the ``RK4Stepper`` derived type
 ! to be exposed to Python.
 !
-module derived_type_manager
+module fgen_rk_manager
 
-   use derived_type, only: DerivedType
+   use fgen_rk, only: RK4Stepper
    use fgen_utils, only: &
       finalize_derived_type_instance_number, &
       get_derived_type_free_instance_number
@@ -17,7 +17,7 @@ module derived_type_manager
 
    integer, parameter :: N_INSTANCES = 4096
 
-   type(DerivedType), target, dimension(N_INSTANCES) :: instance_array
+   type(RK4Stepper), target, dimension(N_INSTANCES) :: instance_array
    logical, dimension(N_INSTANCES) :: instance_available = .true.
 
    public :: get_free_instance_number, &
@@ -49,7 +49,7 @@ contains
       integer, intent(in) :: instance_index
       ! Index of the instance to point to
 
-      type(DerivedType), pointer, intent(inout) :: instance_pointer
+      type(RK4Stepper), pointer, intent(inout) :: instance_pointer
       ! Pointer to associate
 
       call check_index_claimed(instance_index)
@@ -101,4 +101,4 @@ contains
 
    end subroutine check_index_claimed
 
-end module derived_type_manager
+end module fgen_rk_manager
