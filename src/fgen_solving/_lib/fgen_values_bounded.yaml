@@ -1,0 +1,39 @@
+name: fgen_values_bounded
+description: fgen's bounded values handling module
+provides:
+  name: ValuesBounded
+  description: Class for handling values with the idea of bounds included
+  attributes:
+    values:
+      definition:
+        description: values
+        fortran_type: real(8), dimension(:)
+      dynamic_unit: true
+    value_last_bound:
+      definition:
+        description: value to use for last bound
+        fortran_type: real(8)
+      dynamic_unit: true
+    units:
+      definition:
+        description: units of :attr:`values` and :attr:`value_last_bound`
+        fortran_type: character(len=:)
+        is_fortran_units_holder: true
+  methods:
+    repr:
+      description: String representation of self
+      parameters: {}
+      returns:
+        definition:
+          name: res
+          description: String representation of self
+          fortran_type: character(len=:)
+    get_bounds:
+      description: Get the bounds
+      parameters: {}
+      returns:
+        definition:
+          name: bounds
+          description: The bounds of self's data
+          fortran_type: real(kind=8), dimension(:)
+        dynamic_unit: true

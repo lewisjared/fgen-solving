@@ -1,0 +1,109 @@
+name: fgen_timeseries
+description: Timeseries handling
+provides:
+  name: Timeseries
+  description: Timeseries handling container
+  attributes:
+    name:
+      definition:
+        description: Name of the timeseries
+        fortran_type: character(len=:)
+    values:
+      definition:
+        description: values
+        fortran_type: type(ValuesBounded), allocatable
+    time:
+      definition:
+        description: Time axis
+        fortran_type: type(TimeAxis), allocatable
+    spline:
+      definition:
+        description: Kind of spline to assume when performing operations
+        fortran_type: integer(kind(OneDimensionalHandlingOption))
+  methods:
+    get_time_units:
+      description: Get the time units, without having to chain in Python
+      parameters: {}
+      returns:
+        definition:
+          name: tunits
+          description: Time units
+          fortran_type: character(len=:)
+    get_values_units:
+      description: Get the values units, without having to chain in Python
+      parameters: {}
+      returns:
+        definition:
+          name: vunits
+          description: values units
+          fortran_type: character(len=:)
+    get_value_at_time:
+      description: Get a value at a specific time
+      parameters:
+        time:
+          definition:
+            description: Time for which to get the value
+            fortran_type: real(kind=8)
+          dynamic_unit: self.get_time_units()
+      returns:
+        definition:
+          name: value
+          description: The value for time t
+          fortran_type: real(kind=8)
+        dynamic_unit: self.get_values_units()
+    interpolate:
+      description: Interpolate onto a new time axis
+      parameters:
+        time_axis_new:
+          definition:
+            description: New time axis onto which to interpolate
+            fortran_type: type(TimeAxis)
+        allow_extrapolation:
+          definition:
+            description: Should extrapolation be allowed or not?
+            fortran_type: logical
+      returns:
+        definition:
+          name: res
+          description: Interpolation
+          fortran_type: type(Timeseries)
+    differentiate:
+      description: Differentiate
+      parameters:
+        name_res:
+          definition:
+            description: Name of the result of the differentiation
+            fortran_type: character(len=*)
+      returns:
+        definition:
+          name: res
+          description: Derivative
+          fortran_type: type(Timeseries)
+    integrate:
+      description: integrate
+      parameters:
+        c:
+          definition:
+            description: Constant of integration
+            fortran_type: real(kind=8)
+          dynamic_unit: f"{self.get_values_units()} {self.get_time_units()}"
+        name_res:
+          definition:
+            description: Name of the result of the integration
+            fortran_type: character(len=*)
+      returns:
+        definition:
+          name: res
+          description: Integral
+          fortran_type: type(Timeseries)
+
+requirements:
+  - fortran_module: fgen_values_bounded
+    python_module: generated.fgen_values_bounded
+    provides: ValuesBounded
+  - fortran_module: fgen_time
+    python_module: generated.fgen_time
+    provides: TimeAxis
+  - fortran_module: fgen_1d_handling_options
+    python_module: generated.enums
+    provides: OneDimensionalHandlingOption

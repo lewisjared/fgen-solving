@@ -6,8 +6,12 @@
 # ~~~
 set(
   EXTENSION_MODULES
-  derived_type
-  operations
+  fgen_1d_handling_options
+  euler_forward
+  rk
+  time
+  timeseries
+  values_bounded
 )
 
 # Helper variables to shorten the file definitions
@@ -39,7 +43,6 @@ foreach(module ${EXTENSION_MODULES})
   list(
     APPEND
     ANCILLARY_FORTRAN_SOURCES
-    "${extension_directory}/${module}.f90"
     "${extension_directory}/${module}_manager.f90"
   )
   list(
@@ -48,3 +51,25 @@ foreach(module ${EXTENSION_MODULES})
     "${extension_directory}/${module}_wrapped.f90"
   )
 endforeach()
+
+# Additional sources needed to support the wrappers
+list(
+  APPEND
+  ANCILLARY_FORTRAN_SOURCES
+  ${extension_directory}/solve_ivp.f90
+  ${extension_directory}/time.f90
+  ${extension_directory}/timeseries.f90
+  ${extension_directory}/values_bounded.f90
+  ${extension_directory}/1d_handling/differentiation.f90
+  ${extension_directory}/1d_handling/get_boundary_value.f90
+  ${extension_directory}/1d_handling/integration.f90
+  ${extension_directory}/1d_handling/interpolation.f90
+  ${extension_directory}/1d_handling/interpolation_base.f90
+  ${extension_directory}/1d_handling/linear_spline.f90
+  ${extension_directory}/1d_handling/next.f90
+  ${extension_directory}/1d_handling/options.f90
+  ${extension_directory}/1d_handling/previous.f90
+  ${extension_directory}/steppers/base_stepper.f90
+  ${extension_directory}/steppers/euler_forward.f90
+  ${extension_directory}/steppers/rk4.f90
+)

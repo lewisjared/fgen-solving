@@ -1,0 +1,24 @@
+name: fgen_1d_handling_options
+description: Definition of options for fgen's 1D handling
+provides:
+  name: OneDimensionalHandlingOption
+  description: Options for fgen's 1D handling
+  values:
+    NotSpecified:
+      integer_value: -1
+      description: No handling has been specified
+    LinearSpline:
+      integer_value: 1
+      description: Linear spline is assumed between points
+    QuadraticSpline:
+      integer_value: 2
+      description: Quadratic spline is assumed between points
+    CubicSpline:
+      integer_value: 3
+      description: Cubic spline is assumed between points
+    Previous:
+      integer_value: 10
+      description: The value is equal to the last defined point (a type of constant spline)
+    Next:
+      integer_value: 11
+      description: The value is equal to the next defined point (a type of constant spline)
