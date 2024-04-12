@@ -99,11 +99,11 @@ provides:
 
 requirements:
   - fortran_module: fgen_values_bounded
-    python_module: generated.fgen_values_bounded
+    python_module: fgen_solving.fgen_values_bounded
     provides: ValuesBounded
   - fortran_module: fgen_time
-    python_module: generated.fgen_time
+    python_module: fgen_solving.fgen_time
     provides: TimeAxis
   - fortran_module: fgen_1d_handling_options
-    python_module: generated.enums
+    python_module: fgen_solving.enums
     provides: OneDimensionalHandlingOption
