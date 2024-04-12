@@ -1,0 +1,35 @@
+name: Deploy
+
+on:
+  release:
+    types: [published]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  upload-all:
+    name: Upload wheels and sdist to PyPI on release
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Log the tag
+        run: |
+          echo "Uploading assets from ${{ github.ref_name }} to pypi"
+
+      # Pull the released wheels and sdist tarball from the latest GH release
+      - uses: robinraju/release-downloader@v1.10
+        with:
+          tag: "${{ github.ref_name }}"
+          fileName: "*"
+          out-file-path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1

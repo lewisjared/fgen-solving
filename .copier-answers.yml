@@ -1,0 +1,13 @@
+# Changes here will be overwritten by Copier
+_commit: 530dd22
+_src_path: ./copier-fgen-based-repository
+email: jared.lewis@climate-energy-college.org
+extension_module_name: _lib
+initial_setup: true
+name: Jared Lewis
+project_description_short: Fortran-based ODE solving utilties exposed to Python using
+    fgen
+project_name_human: Fortran-based solving utilities
+project_name_pip: fgen-solving
+project_name_python: fgen_solving
+project_url: https://github.com/lewisjared/fgen-solving

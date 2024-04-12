@@ -1,0 +1,37 @@
+name: derived_type
+description: Simple derived type
+provides:
+  name: DerivedType
+  description: An example of a derived type
+  attributes:
+    base:
+      definition:
+        description: Base value
+        fortran_type: real(8)
+      unit: m
+  methods:
+    add:
+      description: Add another value to `self.base`
+      parameters:
+        other:
+          definition:
+            description: Quantity to add
+            fortran_type: real(8)
+          unit: m
+
+      returns:
+        definition:
+          name: output
+          description: Sum of `self.base` and `other`
+          fortran_type: real(8)
+        unit: m
+
+    double:
+      description: Double `self.base`
+      parameters: {}
+      returns:
+        definition:
+          name: output
+          description: Double `self.base`
+          fortran_type: real(8)
+        unit: m
