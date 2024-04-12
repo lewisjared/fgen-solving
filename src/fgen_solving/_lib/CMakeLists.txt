@@ -7,11 +7,11 @@
 set(
   EXTENSION_MODULES
   fgen_1d_handling_options
-  euler_forward
-  rk
-  time
-  timeseries
-  values_bounded
+  fgen_euler_forward
+  fgen_rk
+  fgen_time
+  fgen_timeseries
+  fgen_values_bounded
 )
 
 # Helper variables to shorten the file definitions
@@ -34,7 +34,7 @@ foreach(module ${EXTENSION_MODULES})
       --extension fgen_solving._lib
       --wrapper-directory ${extension_directory}/
       --python-directory ${py_project_directory}/
-    DEPENDS "${extension_directory}/${module}.f90"
+    DEPENDS
              "${extension_directory}/${module}.yaml"
     VERBATIM
   )
